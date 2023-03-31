@@ -1,9 +1,9 @@
 import paddle
-from ProxyTensor import ProxyTensor
+from ..ProxyTensor import ProxyTensor
 
 
 def convert_one(obj):
-    print(f"convert: {obj}")
+    print(f"convert: {obj}    ", end="")
     if callable(obj):
         print("found a callable object")
         return dy2static_call(obj)
