@@ -19,10 +19,8 @@ class Instruction:
     is_jump_target: bool = False
     is_generated: bool = True
 
-    def __hash__(self):
-        return id(self)
 
-
+# convert dis.Instruction
 def convert_instruction(instr):
     return Instruction(
         instr.opcode,
