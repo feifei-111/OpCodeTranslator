@@ -1,5 +1,5 @@
 import paddle
-from ..ProxyTensor import ProxyTensor
+from ..proxy_tensor import ProxyTensor
 
 
 def convert_one(obj):
