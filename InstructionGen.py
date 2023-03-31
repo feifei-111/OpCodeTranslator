@@ -4,23 +4,13 @@ import opcode
 from typing import Optional, Any
 import sys, types
 
-from dy2static_call import dy2static_call
+from convert import convert_one, convert_multi
 
-
-LOADS = [
-    "LOAD_FAST",
-    "LOAD_GLOBAL",
-    "LOAD_METHOD",
-    "LOAD_NAME",
-    "LOAD_CLASSDETEF",
-    "LOAD_DETEF",
-    "LOAD_CLOSURE",
-    "LOAD_ATTR",
-    # "LOAD_CONST"  # not needed
-]
+from opcode_configs import *
 
 ADD_GLOBAL_NAMES = {
-    "dy2static_call" : [-1, dy2static_call],
+    "convert_one" : [-1, convert_one],
+    "convert_multi": [-1, convert_multi],
 }
 
 class InstructionTranslator:
@@ -42,6 +32,9 @@ class InstructionTranslator:
 
     def current_instr(self):
         return self.instrs[self.p]
+    
+    def remove_instr(self):
+        del self.instrs[self.p]
 
     def p_next(self, n=1):
         self.p += n
@@ -68,22 +61,30 @@ class InstructionTranslator:
     def insert_instr(self, instr):
         self.instrs.insert(self.p + 1, instr)
     
-    def insert_instr_list(self, instr_list):
-        part1 = self.instrs[0:self.p+1]
+    def replace_instr_list(self, instr_list):
+        part1 = self.instrs[0:self.p]
         part2 = self.instrs[self.p+1:]
         self.instrs = part1 + instr_list + part2
 
     def run(self):
-        self.transform_loads()
+        self.transform_opcodes_with_push()
         return self.instrs
 
-    def transform_loads(self):
+    def transform_opcodes_with_push(self):
         self.p_seek(-1)
-        while self.find_next_instr(LOADS):
-            to_be_insert = InstrGen(self).gen_for_loads()
-            if to_be_insert:
-                self.insert_instr_list(to_be_insert)
-                self.p_next(len(to_be_insert))
+        gener = InstrGen(self)
+        while self.find_next_instr(ALL_WITH_PUSH):
+            instr = self.current_instr()
+            if instr.opname in PUSH_ONE:
+                to_be_replace = gener.gen_for_push_one()
+                if to_be_replace:
+                    self.replace_instr_list(to_be_replace)
+                    self.p_next(len(to_be_replace)-1)
+            elif instr.opname in PUSH_ARG:
+                to_be_replace = gener.gen_for_push_arg(instr.arg)
+                if to_be_replace:
+                    self.replace_instr_list(to_be_replace)
+                    self.p_next(len(to_be_replace)-1)
 
 
 class InstrGen:
@@ -91,17 +92,35 @@ class InstrGen:
         self.instr_trans = instr_transformer
         self.frame = instr_transformer.frame
 
-    def gen_for_loads(self):
+    def gen_for_push_one(self):
         instr = self.instr_trans.current_instr()
         if instr.is_generated:
             return None
-        arg = ADD_GLOBAL_NAMES["dy2static_call"][0]
+
+        convert_one_arg = ADD_GLOBAL_NAMES["convert_one"][0]
         instrs = [
-            gen_instr("LOAD_GLOBAL", arg= arg, argval="dy2static_call"),
+            instr,
+            gen_instr("LOAD_GLOBAL", arg=convert_one_arg, argval="convert_one"),
             gen_instr("ROT_TWO"),
-            gen_instr("CALL_FUNCTION", arg=1, argval=1)
+            gen_instr("CALL_FUNCTION", arg=1, argval=1),
         ]
         return instrs
+    
+    def gen_for_push_arg(self, arg):
+        instr = self.instr_trans.current_instr()
+        if instr.is_generated:
+            return None
+
+        convert_multi_arg = ADD_GLOBAL_NAMES["convert_multi"][0]
+        instrs = [
+            gen_instr("LOAD_GLOBAL", arg=convert_multi_arg, argval="convert_multi"),
+            gen_instr("ROT_TWO"),
+            gen_instr("CALL_FUNCTION", arg=1, argval=1),
+            instr,
+        ]
+
+        return instrs
+
 
 class _NotProvided:
     pass

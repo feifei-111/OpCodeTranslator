@@ -1,6 +1,7 @@
 import contextlib
 import collections
 import paddle
+import dis
 
 from InstructionGen import InstructionTranslator, convert_instruction
 from OpCodeGen import gen_new_opcode
@@ -63,6 +64,6 @@ def transform_opcode(frame):
     instr_gen = InstructionTranslator(frame, code_options)
     instrs = instr_gen.run()
     new_code = gen_new_opcode(instrs, code_options, keys, frame)
-    import dis
+
     dis.dis(new_code)
     return new_code
