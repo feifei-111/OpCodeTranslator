@@ -1,5 +1,5 @@
 import paddle
-from symbolic_trace import SymbolicTraceContext
+from .symbolic_trace import SymbolicTraceContext
 
 # global variables
 runtime_name_to_eager_tensor = {}
@@ -14,6 +14,10 @@ class MetaInfo:
     @staticmethod
     def from_tensor(tensor):
         return MetaInfo(tensor.shape, tensor.dtype, tensor.stop_gradient)
+
+def clear_runtime_proxytensor():
+    runtime_name_to_eager_tensor.clear()
+    runtime_eager_tensor_to_name.clear()
 
 
 class ProxyTensor:

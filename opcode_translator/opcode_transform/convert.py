@@ -1,5 +1,5 @@
 import paddle
-from ..proxy_tensor import ProxyTensor
+from ..proxy_tensor import ProxyTensor, paddle_api_wrapper
 
 CONVERT_SKIP_NAMES = (
     "convert_one", 
@@ -35,12 +35,7 @@ def convert_multi(args):
     return tuple(retval)
   
 def convert_callable(func):
-    # need to checkout python builtin and paddle api here
-    if isinstance(func, type):
-        return func
-    def wrapper(*args, **kwargs):
-        return func(*args, **kwargs)
-    return wrapper
+    return paddle_api_wrapper(func)
 
 def convert_tensor(tensor):
     return ProxyTensor.from_tensor(tensor)

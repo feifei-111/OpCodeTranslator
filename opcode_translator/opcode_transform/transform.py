@@ -46,7 +46,7 @@ def transform_opcode(frame):
     instr_gen = InstructionTranslator(frame, code_options)
     instrs = instr_gen.run()
     new_code = gen_new_opcode(instrs, code_options, keys, frame)
-    dis.dis(frame.f_code)
+    #dis.dis(frame.f_code)
     dis.dis(new_code)
     return new_code
 
