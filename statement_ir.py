@@ -1,7 +1,7 @@
 """
 THIS FILE IS PRIVATE !!
 
-use interface in symoblic_trace.py first.
+use interface in symbolic_trace.py first.
 """
 
 from singleton import Singleton, NameGenerator
@@ -28,7 +28,7 @@ class Statement:
 
 class StatementIR :
     """
-    don't create by yourself, just use the StatementIRCache.get()
+    Don't create by yourself, just use the StatementIRCache.get()
     """
     def __init__(self, name):
         self.name = name
@@ -55,7 +55,7 @@ class StatementIR :
 
     def __str__(self):
         strs = []
-        strs.append("StatmentIR: %s {" % self.name)
+        strs.append("StatmentIR: %s" % self.name)
         strs.append("  inputs: %s" % self.inputs)
         strs.append("  outputs: %s" % self.outputs)
         strs.append("  statements: ")
@@ -66,7 +66,7 @@ class StatementIR :
     def __repr__(self):
         return self.__str__()
 
-class StatementIRPool:
+class StatementIRFactory:
     def __init__(self):
         self.cache = {}
         self.name_generator = NameGenerator("SIR_")

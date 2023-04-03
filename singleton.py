@@ -16,4 +16,3 @@ class NameGenerator:
         name = self.prefix + str(self.counter)
         self.counter += 1
         return name
-

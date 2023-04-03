@@ -1,5 +1,5 @@
 from singleton import Singleton, NameGenerator
-from statement_ir import StatementIRPool, Statement
+from statement_ir import StatementIRFactory, Statement
 
 @Singleton
 class SymbolicTraceContext:
@@ -7,7 +7,7 @@ class SymbolicTraceContext:
         self.reset()
 
     def reset(self):
-        self.statement_pool = StatementIRPool()
+        self.statement_factory = StatementIRFactory()
         self.var_name_generator = NameGenerator("var_")
         self.sir_stack = []
         self.under_dy2static = None
@@ -24,7 +24,7 @@ class SymbolicTraceContext:
         return self.var_name_generator.next()
 
     def frame_enter(self):
-        self.sir_stack.append(self.statement_pool.create())
+        self.sir_stack.append(self.statement_factory.create())
     
     def call_SIR(self, sirname, inputs, outputs): 
         stmt = Statment("call", sirname, inputs, outputs)
@@ -38,6 +38,6 @@ class SymbolicTraceContext:
     def start_compile(self):
         print ("start subgraph compile and execution.")
         print (self.sir_stack[-1])
-        breakpoint() 
+        #TODO(xiongkun): do program generation and execution.
         pass
 
