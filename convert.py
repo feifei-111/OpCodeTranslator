@@ -1,11 +1,10 @@
 import paddle
-from ProxyTensor import ProxyTensor
-
+from ProxyTensor import ProxyTensor, paddle_api_wrapper
+from symbolic_trace import SymbolicTraceContext
 
 def convert_one(obj):
     print(f"convert: {obj}")
     if callable(obj):
-        print("found a callable object")
         return dy2static_call(obj)
     if isinstance(obj, paddle.Tensor):
         print("found a tensor")
@@ -20,11 +19,8 @@ def convert_multi(args):
         retval.append(convert_one(obj))
     return tuple(retval)
   
-
 def dy2static_call(func):
-    def wrapper(*args, **kwargs):
-        return func(*args, **kwargs)
-    return wrapper
+    return paddle_api_wrapper(func)
 
 def convert_tensor(tensor):
-    return ProxyTensor(tensor)
+    return ProxyTensor.from_tensor(tensor)

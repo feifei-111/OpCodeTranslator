@@ -13,3 +13,4 @@ def caller():
     print(a,b,c)
 
 to_static(caller)()
+

@@ -5,6 +5,7 @@ import dis
 
 from InstructionGen import InstructionTranslator, convert_instruction
 from OpCodeGen import gen_new_opcode
+from symbolic_trace import SymbolicTraceContext
 
 CustomCode = collections.namedtuple("CustomCode", ["code"])
 
@@ -17,7 +18,6 @@ def to_static(func):
 
 
 def eval_frame_callback(frame):
-    # breakpoint()
     if frame.f_code.co_name == "caller":
         new_code = transform_opcode(frame)
         retval = CustomCode(new_code)
@@ -27,9 +27,11 @@ def eval_frame_callback(frame):
 
 @contextlib.contextmanager
 def Dy2staticGuard(callback):
-    paddle.fluid.core.set_eval_frame(callback)
-    yield
-    paddle.fluid.core.set_eval_frame(None)
+    with SymbolicTraceContext() as ctx:
+        paddle.fluid.core.set_eval_frame(callback)
+        yield
+        paddle.fluid.core.set_eval_frame(None)
+        SymbolicTraceContext().start_compile()
 
 
 # can not use frame now, give obj instead temporarily
