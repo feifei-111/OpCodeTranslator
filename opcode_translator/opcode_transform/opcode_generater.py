@@ -20,7 +20,7 @@ def gen_new_opcode(instrs, code_options, keys, frame):
 
 def assemble(instructions, firstlineno):
     cur_line = firstlineno
-    cur_bytecode_offset = 0
+    cur_bytecode = 0
 
     code = []
     lnotab = []
@@ -29,10 +29,11 @@ def assemble(instructions, firstlineno):
         # set lnotab
         if instr.starts_line is not None:
             line_offset = max(-128, min(instr.starts_line - cur_line, 127))
-            bytecode_offset_offset = max(0, min(len(code) - cur_bytecode_offset, 255))
+            bytecode_offset_offset = max(0, min(len(code) - cur_bytecode, 255))
             assert line_offset != 0 or bytecode_offset_offset != 0
             cur_line = instr.starts_line
-            cur_bytecode_offset = len(code)
+            cur_bytecode = len(code)
+            lnotab.extend((bytecode_offset_offset, line_offset))
 
         # get bytecode
         arg = instr.arg or 0

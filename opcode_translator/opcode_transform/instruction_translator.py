@@ -17,6 +17,7 @@ class Instruction:
     offset: Optional[int] = None
     starts_line: Optional[int] = None
     is_jump_target: bool = False
+    jump_to: Optional[int] = None
     is_generated: bool = True
 
 
@@ -30,7 +31,8 @@ def convert_instruction(instr):
         instr.offset,
         instr.starts_line,
         instr.is_jump_target,
-        is_generated=False
+        jump_to=None,
+        is_generated=False,
     )
 
 
@@ -50,6 +52,16 @@ class InstructionTranslator:
     def __init__(self, frame, code_options):
         self.frame = frame
         self.instrs = list(map(convert_instruction, dis.get_instructions(frame.f_code)))
+        self.jump_map = {}
+        for instr in self.instrs:
+            # for 3.8, see dis.py
+            if instr.opcode in opcode.hasjrel:
+                jump_offset = instr.offset + 2 + instr.arg
+                instr.jump_to = self.instrs[jump_offset//2]
+            elif instr.opcode in opcode.hasjabs:
+                jump_offset = instr.arg
+                instr.jump_to = self.instrs[jump_offset//2]
+
         self.code_options = code_options
         self.p = 0                  # a pointer
 
@@ -57,12 +69,17 @@ class InstructionTranslator:
         global ADD_GLOBAL_NAMES
         for key, val in ADD_GLOBAL_NAMES.items():
             _, obj = val
-            if key in frame.f_globals.keys():
+            if key in frame.f_globals.keys() and not (frame.f_globals[key] is obj):
                 raise(f"name {key} already exists!!!")
-            arg = len(code_options["co_names"])
-            ADD_GLOBAL_NAMES[key][0] = arg
-            code_options["co_names"].append(key)
-            frame.f_globals[key] = obj
+            if key in code_options["co_names"]:
+                arg = code_options["co_names"].index(key)
+                ADD_GLOBAL_NAMES[key][0] = arg
+                frame.f_globals[key] = obj
+            else:
+                arg = len(code_options["co_names"])
+                ADD_GLOBAL_NAMES[key][0] = arg
+                code_options["co_names"].append(key)
+                frame.f_globals[key] = obj
 
     def current_instr(self):
         return self.instrs[self.p]
@@ -106,6 +123,7 @@ class InstructionTranslator:
 
     def run(self):
         self.transform_opcodes_with_push()
+        self.modify_instrs()
         return self.instrs
 
     def transform_opcodes_with_push(self):
@@ -128,6 +146,16 @@ class InstructionTranslator:
                     self.replace_instr_list(to_be_replace)
                     self.p_next(len(to_be_replace)-1)
 
+    def modify_instrs(self):
+        # TODO: consider extend_args
+        for idx, instr in enumerate(self.instrs):
+            instr.offset = idx * 2
+        
+        for instr in self.instrs:
+            if instr.opcode in opcode.hasjrel:
+                instr.arg = instr.jump_to.offset - instr.offset - 2
+            elif instr.opcode in opcode.hasjabs:
+                instr.arg = instr.jump_to.offset
 
 class InstrGen:
     def __init__(self, instr_transformer):

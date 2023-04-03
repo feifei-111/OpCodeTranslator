@@ -22,4 +22,4 @@ def caller():
     print(type(tensor))
 
 
-to_static(caller)()
+to_static(caller, with_log=False)()
