@@ -1,9 +1,8 @@
 import paddle
-from ProxyTensor import ProxyTensor, paddle_api_wrapper
-from symbolic_trace import SymbolicTraceContext
+from ..proxy_tensor import ProxyTensor
 
 def convert_one(obj):
-    print(f"convert: {obj}")
+    print(f"convert: {obj}    ", end="")
     if callable(obj):
         return dy2static_call(obj)
     if isinstance(obj, paddle.Tensor):
