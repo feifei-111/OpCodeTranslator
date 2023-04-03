@@ -1,5 +1,5 @@
 import paddle
-from ..proxy_tensor import ProxyTensor
+from ..proxy_tensor import ProxyTensor, paddle_api_wrapper
 
 CONVERT_SKIP_NAMES = (
     "convert_one", 
@@ -26,7 +26,6 @@ def convert_one(obj):
     paddle.fluid.core.set_eval_frame(old_cb)
     return obj
 
-
 def convert_multi(args):
     old_cb = paddle.fluid.core.set_eval_frame(None)
     retval = []
@@ -35,14 +34,8 @@ def convert_multi(args):
     paddle.fluid.core.set_eval_frame(old_cb)
     return tuple(retval)
   
-
 def convert_callable(func):
-    # need to checkout python builtin and paddle api here
-    if isinstance(func, type):
-        return func
-    def wrapper(*args, **kwargs):
-        return func(*args, **kwargs)
-    return wrapper
+    return paddle_api_wrapper(func)
 
 def convert_tensor(tensor):
-    return ProxyTensor(tensor)
+    return ProxyTensor.from_tensor(tensor)
